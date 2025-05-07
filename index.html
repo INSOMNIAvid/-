@@ -1,210 +1,709 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Blast Game</title>
+    <title>Block Blast Deluxe</title>
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #ecf0f1;
+            --block-size: 30px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f0f0f0;
-            margin: 0;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+            color: var(--text-color);
             padding: 20px;
         }
         
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 100%;
+            width: fit-content;
+        }
+        
         h1 {
-            color: #333;
-            margin-bottom: 10px;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #3498db, #e74c3c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
         }
         
         .game-info {
             display: flex;
-            justify-content: space-between;
-            width: 300px;
-            margin-bottom: 15px;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .info-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
         }
         
         .game-board {
             display: grid;
-            grid-template-columns: repeat(10, 30px);
-            grid-template-rows: repeat(10, 30px);
-            gap: 2px;
-            background-color: #999;
-            padding: 5px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            grid-template-columns: repeat(10, var(--block-size));
+            grid-template-rows: repeat(10, var(--block-size));
+            gap: 3px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-board::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0) 20%,
+                rgba(255, 255, 255, 0) 80%,
+                rgba(255, 255, 255, 0.1) 100%
+            );
+            z-index: -1;
         }
         
         .block {
-            width: 30px;
-            height: 30px;
-            border-radius: 3px;
+            width: var(--block-size);
+            height: var(--block-size);
+            border-radius: 4px;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.3s;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: rgba(0, 0, 0, 0.7);
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+        
+        .block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.3) 0%,
+                rgba(255, 255, 255, 0) 50%,
+                rgba(0, 0, 0, 0.1) 100%
+            );
         }
         
         .block:hover {
             transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            z-index: 10;
         }
         
-        .block.destroyed {
-            transform: scale(0);
-            opacity: 0;
+        .block.destroying {
+            animation: blockDestroy 0.5s forwards;
+        }
+        
+        @keyframes blockDestroy {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .combo-display {
+            position: absolute;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #f1c40f;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.7);
+            animation: comboFloat 1s forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        @keyframes comboFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px) scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
         }
         
         button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(45deg, #3498db, #2ecc71);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         
         button:hover {
-            background-color: #45a049;
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                45deg,
+                transparent 10%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 90%
+            );
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+        
+        button:hover::after {
+            transform: translateX(100%);
+        }
+        
+        .powerup-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            background-color: rgba(231, 76, 60, 0.8);
+            padding: 3px 8px;
+            border-radius: 10px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .tutorial {
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 400px;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 600px) {
+            :root {
+                --block-size: 25px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .game-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Block Blast</h1>
-    <div class="game-info">
-        <div>Score: <span id="score">0</span></div>
-        <div>Level: <span id="level">1</span></div>
+    <div class="game-container">
+        <h1>BLOCK BLAST DELUXE</h1>
+        
+        <div class="game-header">
+            <div class="game-info">
+                <div class="info-label">Счет</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="game-info">
+                <div class="info-label">Уровень</div>
+                <div class="info-value" id="level">1</div>
+            </div>
+            <div class="game-info">
+                <div class="info-label">Рекорд</div>
+                <div class="info-value" id="highScore">0</div>
+            </div>
+            <div class="game-info">
+                <div class="info-label">Комбо</div>
+                <div class="info-value" id="combo">0</div>
+            </div>
+        </div>
+        
+        <div class="game-board" id="gameBoard"></div>
+        
+        <div class="controls">
+            <button id="restartBtn">Новая игра</button>
+            <button id="hintBtn">Подсказка</button>
+        </div>
+        
+        <div class="tutorial">
+            Кликайте на блоки, чтобы уничтожать их. Смежные блоки одного цвета уничтожаются вместе. 
+            Чем больше блоков за один клик - тем выше комбо и больше очков!
+        </div>
     </div>
-    <div class="game-board" id="gameBoard"></div>
-    <button id="restartBtn">New Game</button>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Элементы DOM
             const gameBoard = document.getElementById('gameBoard');
             const scoreDisplay = document.getElementById('score');
             const levelDisplay = document.getElementById('level');
+            const highScoreDisplay = document.getElementById('highScore');
+            const comboDisplay = document.getElementById('combo');
             const restartBtn = document.getElementById('restartBtn');
+            const hintBtn = document.getElementById('hintBtn');
             
+            // Игровые переменные
             let score = 0;
+            let highScore = localStorage.getItem('blockBlastHighScore') || 0;
             let level = 1;
+            let combo = 0;
+            let maxCombo = 0;
+            let blocksDestroyedThisLevel = 0;
+            let hintActive = false;
+            let hintTimeout = null;
+            let blocks = [];
             const rows = 10;
             const cols = 10;
-            let blocks = [];
             
-            // Initialize the game
+            // Цвета блоков
+            const blockColors = [
+                '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', 
+                '#536DFE', '#448AFF', '#40C4FF', '#18FFFF', 
+                '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41', 
+                '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'
+            ];
+            
+            // Инициализация игры
             function initGame() {
                 score = 0;
                 level = 1;
-                scoreDisplay.textContent = score;
-                levelDisplay.textContent = level;
+                combo = 0;
+                maxCombo = 0;
+                blocksDestroyedThisLevel = 0;
+                
+                updateDisplays();
                 createBoard();
             }
             
-            // Create the game board with blocks
+            // Создание игрового поля
             function createBoard() {
                 gameBoard.innerHTML = '';
                 blocks = [];
                 
-                // Generate random colors for blocks
-                const colors = [
-                    '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', 
-                    '#536DFE', '#448AFF', '#40C4FF', '#18FFFF', 
-                    '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41', 
-                    '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'
-                ];
-                
                 for (let row = 0; row < rows; row++) {
                     blocks[row] = [];
                     for (let col = 0; col < cols; col++) {
-                        const block = document.createElement('div');
-                        block.className = 'block';
-                        const colorIndex = Math.floor(Math.random() * colors.length);
-                        block.style.backgroundColor = colors[colorIndex];
-                        
-                        // Store block value (1-5) for scoring
-                        const value = Math.floor(Math.random() * 5) + 1;
-                        block.dataset.value = value;
-                        
-                        block.addEventListener('click', () => destroyBlock(row, col));
-                        gameBoard.appendChild(block);
-                        blocks[row][col] = block;
+                        createBlock(row, col);
                     }
                 }
             }
             
-            // Destroy a block and adjacent blocks of the same color
-            function destroyBlock(row, col) {
+            // Создание блока
+            function createBlock(row, col) {
+                const block = document.createElement('div');
+                block.className = 'block';
+                
+                // Случайный цвет и значение
+                const colorIndex = Math.floor(Math.random() * blockColors.length);
+                block.style.backgroundColor = blockColors[colorIndex];
+                
+                // Значение блока (1-5)
+                const value = Math.floor(Math.random() * 5) + 1;
+                block.dataset.value = value;
+                block.textContent = value;
+                
+                // Специальные блоки (10% chance)
+                if (Math.random() < 0.1) {
+                    block.dataset.special = 'true';
+                    block.innerHTML = '<span style="font-size: 1.2em;">★</span>';
+                    block.style.boxShadow = '0 0 10px gold';
+                }
+                
+                block.addEventListener('click', () => handleBlockClick(row, col));
+                gameBoard.appendChild(block);
+                blocks[row][col] = block;
+            }
+            
+            // Обработка клика по блоку
+            function handleBlockClick(row, col) {
+                if (hintActive) {
+                    clearHint();
+                }
+                
+                const block = blocks[row][col];
+                if (!block || block.classList.contains('destroying')) return;
+                
+                const color = block.style.backgroundColor;
+                const isSpecial = block.dataset.special === 'true';
+                let blocksToDestroy = [];
+                
+                // Находим все смежные блоки того же цвета
+                findAdjacentBlocks(row, col, color, blocksToDestroy);
+                
+                // Если только один блок - сбрасываем комбо
+                if (blocksToDestroy.length <= 1) {
+                    combo = 0;
+                    updateDisplays();
+                    return;
+                }
+                
+                // Увеличиваем комбо
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+                
+                // Уничтожаем блоки
+                destroyBlocks(blocksToDestroy, isSpecial);
+                
+                // Обновляем счет
+                updateScore(blocksToDestroy.length, isSpecial);
+                
+                // Проверяем завершение уровня
+                setTimeout(checkLevelComplete, 600);
+            }
+            
+            // Поиск смежных блоков того же цвета
+            function findAdjacentBlocks(row, col, color, result) {
                 if (row < 0 || row >= rows || col < 0 || col >= cols) return;
                 
                 const block = blocks[row][col];
-                if (!block || block.classList.contains('destroyed')) return;
+                if (!block || 
+                    block.classList.contains('destroying') || 
+                    block.style.backgroundColor !== color ||
+                    result.includes(block)) return;
                 
-                const color = block.style.backgroundColor;
-                const value = parseInt(block.dataset.value);
+                result.push(block);
                 
-                // Mark as destroyed with animation
-                block.classList.add('destroyed');
-                
-                // Remove from DOM after animation
-                setTimeout(() => {
-                    block.remove();
-                }, 300);
-                
-                // Update score
-                score += value * level;
-                scoreDisplay.textContent = score;
-                
-                // Check and destroy adjacent blocks of the same color
-                const directions = [
-                    [-1, 0], [1, 0], [0, -1], [0, 1]
-                ];
-                
-                for (const [dx, dy] of directions) {
-                    const newRow = row + dx;
-                    const newCol = col + dy;
-                    
-                    if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                        const adjacentBlock = blocks[newRow][newCol];
-                        if (adjacentBlock && 
-                            !adjacentBlock.classList.contains('destroyed') && 
-                            adjacentBlock.style.backgroundColor === color) {
-                            destroyBlock(newRow, newCol);
-                        }
-                    }
-                }
-                
-                // Check if level is complete
-                setTimeout(checkLevelComplete, 350);
+                // Проверяем соседей
+                findAdjacentBlocks(row - 1, col, color, result); // Вверх
+                findAdjacentBlocks(row + 1, col, color, result); // Вниз
+                findAdjacentBlocks(row, col - 1, color, result); // Влево
+                findAdjacentBlocks(row, col + 1, color, result); // Вправо
             }
             
-            // Check if all blocks are destroyed
+            // Уничтожение блоков с анимацией
+            function destroyBlocks(blocksToDestroy, isSpecial) {
+                blocksDestroyedThisLevel += blocksToDestroy.length;
+                
+                // Анимация комбо
+                if (blocksToDestroy.length > 2) {
+                    showCombo(blocksToDestroy[0], blocksToDestroy.length);
+                }
+                
+                // Уничтожение каждого блока
+                blocksToDestroy.forEach((block, index) => {
+                    block.classList.add('destroying');
+                    
+                    // Задержка для цепной реакции
+                    setTimeout(() => {
+                        block.remove();
+                        
+                        // Для специальных блоков - взрывной эффект
+                        if (isSpecial && index === 0) {
+                            createExplosion(block, 5);
+                        }
+                    }, index * 50);
+                });
+            }
+            
+            // Показать комбо
+            function showCombo(block, count) {
+                const comboText = document.createElement('div');
+                comboText.className = 'combo-display';
+                comboText.textContent = `COMBO x${count}!`;
+                
+                const rect = block.getBoundingClientRect();
+                comboText.style.left = `${rect.left + rect.width / 2}px`;
+                comboText.style.top = `${rect.top + rect.height / 2}px`;
+                
+                document.body.appendChild(comboText);
+                
+                setTimeout(() => {
+                    comboText.remove();
+                }, 1000);
+            }
+            
+            // Создать эффект взрыва
+            function createExplosion(block, radius) {
+                const rect = block.getBoundingClientRect();
+                const centerX = Math.floor(rect.left + rect.width / 2);
+                const centerY = Math.floor(rect.top + rect.height / 2);
+                
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.position = 'absolute';
+                    particle.style.width = '6px';
+                    particle.style.height = '6px';
+                    particle.style.borderRadius = '50%';
+                    particle.style.backgroundColor = 'gold';
+                    particle.style.left = `${centerX}px`;
+                    particle.style.top = `${centerY}px`;
+                    particle.style.pointerEvents = 'none';
+                    particle.style.zIndex = '1000';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * radius * 20;
+                    const duration = Math.random() * 0.5 + 0.5;
+                    
+                    document.body.appendChild(particle);
+                    
+                    particle.animate([
+                        { 
+                            transform: 'translate(0, 0) scale(1)',
+                            opacity: 1 
+                        },
+                        { 
+                            transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`,
+                            opacity: 0 
+                        }
+                    ], {
+                        duration: duration * 1000,
+                        easing: 'cubic-bezier(0, 0.8, 0.2, 1)'
+                    });
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                    }, duration * 1000);
+                }
+            }
+            
+            // Обновление счета
+            function updateScore(blocksCount, isSpecial) {
+                let multiplier = level * (1 + combo * 0.2);
+                if (isSpecial) multiplier *= 2;
+                
+                const points = Math.floor(blocksCount * 10 * multiplier);
+                score += points;
+                
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('blockBlastHighScore', highScore);
+                }
+                
+                updateDisplays();
+            }
+            
+            // Проверка завершения уровня
             function checkLevelComplete() {
-                let allDestroyed = true;
+                let blocksRemaining = 0;
                 
                 for (let row = 0; row < rows; row++) {
                     for (let col = 0; col < cols; col++) {
-                        if (blocks[row][col] && !blocks[row][col].classList.contains('destroyed')) {
-                            allDestroyed = false;
-                            break;
+                        if (blocks[row][col] && !blocks[row][col].classList.contains('destroying')) {
+                            blocksRemaining++;
                         }
                     }
-                    if (!allDestroyed) break;
                 }
                 
-                if (allDestroyed) {
+                if (blocksRemaining === 0) {
                     level++;
-                    levelDisplay.textContent = level;
-                    setTimeout(createBoard, 500);
+                    combo = 0;
+                    setTimeout(() => {
+                        createBoard();
+                        showLevelUp();
+                    }, 800);
+                } else if (blocksRemaining < 5) {
+                    // Подсказка, если осталось мало блоков
+                    setTimeout(showHint, 1500);
                 }
             }
             
-            // Event listener for restart button
-            restartBtn.addEventListener('click', initGame);
+            // Показать сообщение о новом уровне
+            function showLevelUp() {
+                const levelUp = document.createElement('div');
+                levelUp.textContent = `Уровень ${level}!`;
+                levelUp.style.position = 'fixed';
+                levelUp.style.top = '50%';
+                levelUp.style.left = '50%';
+                levelUp.style.transform = 'translate(-50%, -50%)';
+                levelUp.style.fontSize = '3rem';
+                levelUp.style.fontWeight = 'bold';
+                levelUp.style.color = '#f1c40f';
+                levelUp.style.textShadow = '0 0 20px rgba(241, 196, 15, 0.8)';
+                levelUp.style.zIndex = '1000';
+                levelUp.style.pointerEvents = 'none';
+                
+                document.body.appendChild(levelUp);
+                
+                levelUp.animate([
+                    { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 0 },
+                    { transform: 'translate(-50%, -50%) scale(1.2)', opacity: 1 },
+                    { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                    { transform: 'translate(-50%, -50%) scale(1.5)', opacity: 0 }
+                ], {
+                    duration: 1500,
+                    easing: 'cubic-bezier(0.2, 0.8, 0.4, 1)'
+                });
+                
+                setTimeout(() => {
+                    levelUp.remove();
+                }, 1500);
+            }
             
-            // Start the game
+            // Показать подсказку
+            function showHint() {
+                if (hintActive) return;
+                
+                // Находим самую большую группу блоков
+                let maxGroup = [];
+                const visited = new Set();
+                
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const block = blocks[row][col];
+                        if (!block || block.classList.contains('destroying') || visited.has(block)) continue;
+                        
+                        const group = [];
+                        findAdjacentBlocks(row, col, block.style.backgroundColor, group);
+                        
+                        if (group.length > maxGroup.length) {
+                            maxGroup = group;
+                        }
+                        
+                        group.forEach(b => visited.add(b));
+                    }
+                }
+                
+                if (maxGroup.length > 1) {
+                    hintActive = true;
+                    maxGroup.forEach(block => {
+                        block.style.boxShadow = '0 0 15px white';
+                    });
+                    
+                    hintTimeout = setTimeout(clearHint, 2000);
+                }
+            }
+            
+            // Очистить подсказку
+            function clearHint() {
+                if (!hintActive) return;
+                
+                document.querySelectorAll('.block').forEach(block => {
+                    if (block.dataset.special !== 'true') {
+                        block.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                    }
+                });
+                
+                hintActive = false;
+                if (hintTimeout) {
+                    clearTimeout(hintTimeout);
+                    hintTimeout = null;
+                }
+            }
+            
+            // Обновление отображения информации
+            function updateDisplays() {
+                scoreDisplay.textContent = score;
+                levelDisplay.textContent = level;
+                highScoreDisplay.textContent = highScore;
+                comboDisplay.textContent = combo;
+                
+                // Анимация комбо
+                if (combo > 3) {
+                    comboDisplay.style.color = '#f1c40f';
+                    comboDisplay.style.textShadow = '0 0 10px rgba(241, 196, 15, 0.7)';
+                } else {
+                    comboDisplay.style.color = '';
+                    comboDisplay.style.textShadow = '';
+                }
+            }
+            
+            // Обработчики событий
+            restartBtn.addEventListener('click', initGame);
+            hintBtn.addEventListener('click', showHint);
+            
+            // Запуск игры
             initGame();
         });
     </script>
