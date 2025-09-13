@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Connect Integration</title>
+    <title>TON Connect Demo</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         body {
@@ -45,131 +45,152 @@
         .button-disconnect:hover {
             background-color: #c82333;
         }
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background-color: #f8d7da;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>TON Connect Integration</h1>
+        <h1>TON Connect Demo</h1>
+        <p>Подключите свой TON кошелек для взаимодействия с приложением</p>
         
         <div id="ton-connect"></div>
+        
+        <div id="error-message" class="error" style="display: none;"></div>
         
         <div id="wallet-info" class="wallet-info" style="display: none;">
             <h3>Информация о кошельке:</h3>
             <p id="wallet-address"></p>
             <p id="wallet-balance"></p>
             <p id="wallet-device"></p>
+            <p id="wallet-chain"></p>
             
             <button id="disconnect-btn" class="button button-disconnect">Отключить кошелек</button>
-            <button id="send-tx-btn" class="button">Отправить транзакцию</button>
+            <button id="send-tx-btn" class="button">Отправить тестовую транзакцию</button>
         </div>
     </div>
 
     <script>
         // Инициализация TON Connect UI
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://insomniavid.github.io/-/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect'
-        });
+        let tonConnectUI = null;
+        
+        try {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: 'https://raw.githubusercontent.com/InsomniaVid/-/main/tonconnect-manifest.json',
+                buttonRootId: 'ton-connect'
+            });
+            
+            // Элементы DOM
+            const walletInfo = document.getElementById('wallet-info');
+            const walletAddress = document.getElementById('wallet-address');
+            const walletBalance = document.getElementById('wallet-balance');
+            const walletDevice = document.getElementById('wallet-device');
+            const walletChain = document.getElementById('wallet-chain');
+            const disconnectBtn = document.getElementById('disconnect-btn');
+            const sendTxBtn = document.getElementById('send-tx-btn');
+            const errorMessage = document.getElementById('error-message');
 
-        // Элементы DOM
-        const walletInfo = document.getElementById('wallet-info');
-        const walletAddress = document.getElementById('wallet-address');
-        const walletBalance = document.getElementById('wallet-balance');
-        const walletDevice = document.getElementById('wallet-device');
-        const disconnectBtn = document.getElementById('disconnect-btn');
-        const sendTxBtn = document.getElementById('send-tx-btn');
+            // Проверка подключения при загрузке
+            tonConnectUI.connectionRestored.then(() => {
+                updateUI();
+            }).catch(error => {
+                console.log('Восстановление соединения не требуется:', error);
+            });
 
-        // Проверка подключения при загрузке
-        tonConnectUI.connectionRestored.then(() => {
-            updateUI();
-        });
+            // Подписка на изменения состояния
+            tonConnectUI.onStatusChange(wallet => {
+                updateUI(wallet);
+            });
 
-        // Подписка на изменения состояния
-        tonConnectUI.onStatusChange(wallet => {
-            updateUI(wallet);
-        });
+            // Функция обновления интерфейса
+            function updateUI(wallet = null) {
+                if (!wallet) {
+                    wallet = tonConnectUI.wallet;
+                }
 
-        // Функция обновления интерфейса
-        function updateUI(wallet = null) {
-            if (!wallet) {
-                wallet = tonConnectUI.wallet;
+                if (wallet) {
+                    walletInfo.style.display = 'block';
+                    walletAddress.textContent = `Адрес: ${wallet.account.address}`;
+                    walletDevice.textContent = `Устройство: ${wallet.device.appName}`;
+                    walletChain.textContent = `Сеть: ${wallet.account.chain === -3 ? 'Testnet' : 'Mainnet'}`;
+                    
+                    // Получение баланса
+                    getBalance(wallet.account.address).then(balance => {
+                        walletBalance.textContent = `Баланс: ${balance} TON`;
+                    }).catch(error => {
+                        console.error('Ошибка получения баланса:', error);
+                        walletBalance.textContent = `Баланс: Не доступен`;
+                    });
+                    
+                    errorMessage.style.display = 'none';
+                } else {
+                    walletInfo.style.display = 'none';
+                }
             }
 
-            if (wallet) {
-                walletInfo.style.display = 'block';
-                walletAddress.textContent = `Адрес: ${wallet.account.address}`;
-                walletDevice.textContent = `Устройство: ${wallet.device.appName}`;
-                
-                // Получение баланса
-                getBalance(wallet.account.address).then(balance => {
-                    walletBalance.textContent = `Баланс: ${balance} TON`;
-                });
-            } else {
+            // Функция получения баланса
+            async function getBalance(address) {
+                try {
+                    // Определяем сеть на основе адреса
+                    const isTestnet = address.includes('testnet') || address.includes('-3:');
+                    const baseUrl = isTestnet 
+                        ? 'https://testnet.toncenter.com/api/v2' 
+                        : 'https://toncenter.com/api/v2';
+                    
+                    const response = await fetch(`${baseUrl}/getAddressInformation?address=${address}`);
+                    const data = await response.json();
+                    
+                    if (data.ok && data.result) {
+                        return (data.result.balance / 1000000000).toFixed(2);
+                    } else {
+                        throw new Error('Не удалось получить баланс');
+                    }
+                } catch (error) {
+                    console.error('Ошибка получения баланса:', error);
+                    return 'N/A';
+                }
+            }
+
+            // Отключение кошелька
+            disconnectBtn.addEventListener('click', () => {
+                tonConnectUI.disconnect();
                 walletInfo.style.display = 'none';
-            }
+            });
+
+            // Отправка транзакции
+            sendTxBtn.addEventListener('click', async () => {
+                try {
+                    const transaction = {
+                        validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
+                        messages: [
+                            {
+                                address: 'UQApupz4Ue6GqzKSfTe1jX8eJ3V8_HYekgaiwC-bNYnMLmEN',
+                                amount: '1000000', // 0.001 TON
+                                payload: null
+                            }
+                        ]
+                    };
+
+                    const result = await tonConnectUI.sendTransaction(transaction);
+                    alert('Транзакция отправлена успешно!');
+                    console.log('Результат транзакции:', result);
+                } catch (error) {
+                    console.error('Ошибка отправки транзакции:', error);
+                    alert('Ошибка отправки транзакции: ' + error.message);
+                }
+            });
+
+        } catch (error) {
+            console.error('Ошибка инициализации TON Connect:', error);
+            document.getElementById('error-message').textContent = 
+                'Ошибка инициализации: ' + error.message;
+            document.getElementById('error-message').style.display = 'block';
         }
-
-        // Функция получения баланса
-        async function getBalance(address) {
-            try {
-                const response = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${address}`);
-                const data = await response.json();
-                return (data.result.balance / 1000000000).toFixed(2);
-            } catch (error) {
-                console.error('Ошибка получения баланса:', error);
-                return 'N/A';
-            }
-        }
-
-        // Отключение кошелька
-        disconnectBtn.addEventListener('click', () => {
-            tonConnectUI.disconnect();
-        });
-
-        // Отправка транзакции
-        sendTxBtn.addEventListener('click', async () => {
-            try {
-                const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
-                    messages: [
-                        {
-                            address: 'UQApupz4Ue6GqzKSfTe1jX8eJ3V8_HYekgaiwC-bNYnMLmEN',
-                            amount: '1000000', // 0.001 TON
-                            payload: null
-                        }
-                    ]
-                };
-
-                const result = await tonConnectUI.sendTransaction(transaction);
-                alert('Транзакция отправлена успешно!');
-                console.log('Результат транзакции:', result);
-            } catch (error) {
-                console.error('Ошибка отправки транзакции:', error);
-                alert('Ошибка отправки транзакции');
-            }
-        });
-
-        // Дополнительные функции
-        async function getWalletInfo() {
-            const wallet = tonConnectUI.wallet;
-            if (wallet) {
-                return {
-                    address: wallet.account.address,
-                    chain: wallet.account.chain,
-                    publicKey: wallet.account.publicKey,
-                    device: wallet.device
-                };
-            }
-            return null;
-        }
-
-        // Проверка сети
-        function isTestnet() {
-            const wallet = tonConnectUI.wallet;
-            return wallet && wallet.account.chain === -3;
-        }
-
-        console.log('TON Connect инициализирован');
     </script>
 </body>
 </html>
