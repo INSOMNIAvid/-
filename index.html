@@ -3,585 +3,1241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оплата 1 TON - Полная система</title>
+    <title>Loopy-Droopy Coin Games</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff6b6b;
+            --dark: #2d3436;
+            --light: #dfe6e9;
+            --success: #00b894;
+            --warning: #fdcb6e;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
             min-height: 100vh;
-            padding: 20px;
-            color: #333;
+            padding-bottom: 70px;
         }
         
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-        
-        .subtitle {
-            color: #7f8c8d;
-            font-size: 1.2em;
-        }
-        
-        .payment-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        @media (max-width: 768px) {
-            .payment-section {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .payment-card {
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 2px solid #e9ecef;
-            text-align: center;
-        }
-        
-        .payment-card h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        
-        .payment-card p {
-            color: #6c757d;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-        
-        .amount {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #28a745;
-            margin: 15px 0;
-        }
-        
-        .button {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin: 10px 0;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
-        }
-        
-        .button-success {
-            background: linear-gradient(135deg, #28a745, #218838);
-        }
-        
-        .button-success:hover {
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        }
-        
-        .button-danger {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-        }
-        
-        .status {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .status-success {
-            background: rgba(40, 167, 69, 0.2);
-            border: 2px solid #28a745;
-            color: #155724;
-        }
-        
-        .status-error {
-            background: rgba(220, 53, 69, 0.2);
-            border: 2px solid #dc3545;
-            color: #721c24;
-        }
-        
-        .status-info {
-            background: rgba(23, 162, 184, 0.2);
-            border: 2px solid #17a2b8;
-            color: #0c5460;
-        }
-        
-        .wallet-info {
-            background: rgba(248, 249, 250, 0.8);
+            max-width: 100%;
             padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #007bff;
         }
         
-        .wallet-address {
-            background: rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            word-break: break-all;
-            margin: 10px 0;
-            font-family: monospace;
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            opacity: 0.8;
             font-size: 14px;
         }
         
-        .manual-payment {
-            background: rgba(255, 193, 7, 0.1);
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 2px dashed #ffc107;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         
-        .transaction-history {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(248, 249, 250, 0.8);
-            border-radius: 10px;
-        }
-        
-        .transaction-item {
-            padding: 15px;
-            border-bottom: 1px solid #dee2e6;
+        .stats {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 15px;
         }
         
-        .transaction-item:last-child {
-            border-bottom: none;
+        .stat-item {
+            text-align: center;
+            flex: 1;
         }
         
-        .badge {
-            padding: 5px 10px;
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .coin {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(145deg, var(--warning), var(--accent));
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2), 
+                        inset 0 -8px 15px rgba(0,0,0,0.1),
+                        inset 0 8px 15px rgba(255,255,255,0.3);
+            user-select: none;
+            transition: transform 0.1s;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .coin:after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
+            transform: rotate(45deg);
+        }
+        
+        .coin-text {
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--warning));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, var(--success), var(--accent));
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-ton {
+            background: linear-gradient(90deg, #0088cc, #0066aa);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+        }
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .game-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .game-item:active {
+            transform: scale(0.95);
+        }
+        
+        .game-icon {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .premium-card {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            color: var(--dark);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .premium-card:before {
+            content: 'PREMIUM';
+            position: absolute;
+            top: 10px;
+            right: -25px;
+            background: var(--accent);
+            color: white;
+            padding: 5px 30px;
+            font-size: 12px;
+            font-weight: bold;
+            transform: rotate(45deg);
+        }
+        
+        .premium-feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .premium-feature i {
+            color: var(--success);
+            margin-right: 10px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(45, 52, 54, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: color 0.3s;
+            flex: 1;
+        }
+        
+        .nav-item.active {
+            color: var(--warning);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .task-checkbox {
+            margin-right: 15px;
+            width: 22px;
+            height: 22px;
+            accent-color: var(--success);
+        }
+        
+        .task-reward {
+            margin-left: auto;
+            background: var(--success);
+            padding: 4px 10px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
         }
         
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
+        .shop-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-bottom: 15px;
         }
         
-        .badge-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .badge-failed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        footer {
+        .shop-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 40px;
             text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #dee2e6;
-            color: #6c757d;
         }
         
-        #ton-connect {
+        .shop-content {
+            flex: 1;
+        }
+        
+        .shop-price {
+            background: var(--accent);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .pulse {
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .coin-float {
+            position: absolute;
+            font-weight: bold;
+            color: var(--warning);
+            pointer-events: none;
+            animation: floatUp 1s forwards;
+            z-index: 10;
+        }
+        
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .ton-connect-section {
             margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .wallet-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            word-break: break-all;
+            font-size: 14px;
+        }
+        
+        .deposit-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+        
+        .deposit-amount {
+            display: flex;
+            margin: 15px 0;
+            gap: 10px;
+        }
+        
+        .deposit-amount input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .deposit-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .deposit-option {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .deposit-option.active {
+            background: var(--success);
+        }
+        
+        .game-container {
+            margin-top: 20px;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .game-cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .game-message {
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
+            min-height: 24px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>💎 TON Payment System</h1>
-            <p class="subtitle">Принимайте платежи в TON легко и безопасно</p>
-        </header>
-
-        <div id="ton-connect"></div>
-
-        <div id="wallet-info" class="wallet-info" style="display: none;">
-            <h3>Информация о кошельке</h3>
-            <p><strong>Адрес:</strong> <span id="wallet-address"></span></p>
-            <p><strong>Баланс:</strong> <span id="wallet-balance"></span> TON</p>
-            <p><strong>Статус:</strong> <span id="wallet-status"></span></p>
-            <button id="disconnect-btn" class="button button-danger">Отключить кошелек</button>
-        </div>
-
-        <div class="payment-section">
-            <div class="payment-card">
-                <h3>🚀 Быстрая оплата</h3>
-                <p>Оплатите через TON Connect в один клик</p>
-                <div class="amount">1 TON</div>
-                <button id="ton-connect-pay" class="button" disabled>Оплатить через TON Connect</button>
+        <!-- Главная страница -->
+        <div class="page active" id="home-page">
+            <div class="header">
+                <h1>Loopy-Droopy Coin</h1>
+                <p>Тапай, играй и зарабатывай!</p>
             </div>
-
-            <div class="payment-card">
-                <h3>📨 Ручная оплата</h3>
-                <p>Отправьте TON на указанный адрес</p>
-                <div class="amount">1 TON</div>
-                <button id="manual-pay-btn" class="button button-success">Показать реквизиты</button>
+            
+            <div class="ton-connect-section">
+                <h3><i class="fas fa-wallet"></i> Подключение кошелька TON</h3>
+                <div id="ton-connect"></div>
+                <div id="wallet-info" style="display: none;">
+                    <div class="wallet-info">
+                        <p><strong>Адрес:</strong> <span id="wallet-address"></span></p>
+                        <p><strong>Баланс:</strong> <span id="wallet-balance">0</span> TON</p>
+                    </div>
+                    <button id="disconnect-btn" class="btn button-danger">Отключить кошелек</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="balance">0</div>
+                        <div class="stat-label">LOOPY</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="level">1</div>
+                        <div class="stat-label">Уровень</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="multiplier">1x</div>
+                        <div class="stat-label">Множитель</div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-bar"></div>
+                </div>
+                
+                <div id="coin-container">
+                    <div class="coin" id="coin">
+                        <span class="coin-text">TAP!</span>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="claimRewards()">
+                    <i class="fas fa-coins"></i> Забрать награду
+                </button>
+                <button class="btn btn-secondary" onclick="showNotification('Бонус активирован! +5 LOOPY')">
+                    <i class="fas fa-gift"></i> Ежедневный бонус
+                </button>
+            </div>
+            
+            <div class="card">
+                <h3 class="section-title"><i class="fas fa-gamepad"></i> Игры</h3>
+                <div class="game-grid">
+                    <div class="game-item" onclick="openGame('puzzle')">
+                        <div class="game-icon"><i class="fas fa-puzzle-piece"></i></div>
+                        <div>Головоломки</div>
+                    </div>
+                    <div class="game-item" onclick="openGame('memory')">
+                        <div class="game-icon"><i class="fas fa-brain"></i></div>
+                        <div>Память</div>
+                    </div>
+                    <div class="game-item" onclick="openGame('quiz')">
+                        <div class="game-icon"><i class="fas fa-question"></i></div>
+                        <div>Викторина</div>
+                    </div>
+                    <div class="game-item" onclick="openGame('slots')">
+                        <div class="game-icon"><i class="fas fa-dice"></i></div>
+                        <div>Слоты</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card premium-card">
+                <h3 class="section-title"><i class="fas fa-crown"></i> Premium Подписка</h3>
+                <div class="premium-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Безлимитное тапание</span>
+                </div>
+                <div class="premium-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>x2 заработок монет</span>
+                </div>
+                <div class="premium-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Эксклюзивные игры</span>
+                </div>
+                <button class="btn" onclick="buyPremium()">
+                    <i class="fas fa-bolt"></i> Купить за 10 TON
+                </button>
             </div>
         </div>
-
-        <div id="manual-payment" class="manual-payment" style="display: none;">
-            <h3>📋 Реквизиты для оплаты</h3>
-            <p>Отправьте <strong>1 TON</strong> на адрес:</p>
-            <div class="wallet-address" id="payment-address">UQApupz4Ue6GqzKSfTe1jX8eJ3V8_HYekgaiwC-bNYnMLmEN</div>
-            <p>В комментарии укажите: <strong id="payment-comment"></strong></p>
-            <button id="check-payment" class="button">Проверить оплату</button>
-            <button id="copy-address" class="button">Скопировать адрес</button>
-        </div>
-
-        <div id="payment-status" class="status" style="display: none;"></div>
-
-        <div class="transaction-history">
-            <h3>📊 История транзакций</h3>
-            <div id="transactions-list">
-                <p style="text-align: center; color: #6c757d;">Транзакций пока нет</p>
+        
+        <!-- Страница игр -->
+        <div class="page" id="games-page">
+            <div class="header">
+                <h1>Игровая площадка</h1>
+                <p>Выберите игру для заработка монет</p>
+            </div>
+            
+            <div class="game-grid">
+                <div class="game-item" onclick="startGame('tictactoe')">
+                    <div class="game-icon"><i class="fas fa-times"></i></div>
+                    <div>Крестики-нолики</div>
+                    <small>+10 LOOPY за победу</small>
+                </div>
+                <div class="game-item" onclick="startGame('slots')">
+                    <div class="game-icon"><i class="fas fa-dice"></i></div>
+                    <div>Слоты</div>
+                    <small>Джекпот до 50 LOOPY</small>
+                </div>
+                <div class="game-item" onclick="startGame('memory')">
+                    <div class="game-icon"><i class="fas fa-brain"></i></div>
+                    <div>Память</div>
+                    <small>+3 LOOPY за раунд</small>
+                </div>
+                <div class="game-item" onclick="startGame('dice')">
+                    <div class="game-icon"><i class="fas fa-dice-six"></i></div>
+                    <div>Кости</div>
+                    <small>Ставка от 5 LOOPY</small>
+                </div>
+            </div>
+            
+            <div id="tictactoe-game" class="game-container" style="display: none;">
+                <h3>Крестики-нолики</h3>
+                <div class="game-board" id="tictactoe-board">
+                    <div class="game-cell" data-index="0"></div>
+                    <div class="game-cell" data-index="1"></div>
+                    <div class="game-cell" data-index="2"></div>
+                    <div class="game-cell" data-index="3"></div>
+                    <div class="game-cell" data-index="4"></div>
+                    <div class="game-cell" data-index="5"></div>
+                    <div class="game-cell" data-index="6"></div>
+                    <div class="game-cell" data-index="7"></div>
+                    <div class="game-cell" data-index="8"></div>
+                </div>
+                <div class="game-message" id="tictactoe-message"></div>
+                <button class="btn" onclick="resetTicTacToe()">Новая игра</button>
+                <button class="btn btn-secondary" onclick="hideGame('tictactoe')">Вернуться</button>
+            </div>
+            
+            <div id="slots-game" class="game-container" style="display: none;">
+                <h3>Игровые автоматы</h3>
+                <div class="game-board" id="slots-board">
+                    <div class="game-cell">🍒</div>
+                    <div class="game-cell">🍋</div>
+                    <div class="game-cell">🍊</div>
+                </div>
+                <div class="game-message" id="slots-message"></div>
+                <button class="btn" onclick="spinSlots()">Крутить (5 LOOPY)</button>
+                <button class="btn btn-secondary" onclick="hideGame('slots')">Вернуться</button>
             </div>
         </div>
-
-        <footer>
-            <p>TON Payment System v1.0 &copy; 2024</p>
-            <p>Безопасные платежи в сети TON</p>
-        </footer>
+        
+        <!-- Страница магазина -->
+        <div class="page" id="shop-page">
+            <div class="header">
+                <h1>Магазин улучшений</h1>
+                <p>Прокачивайте свои возможности</p>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-icon"><i class="fas fa-bolt"></i></div>
+                <div class="shop-content">
+                    <h3>Улучшенный тап</h3>
+                    <p>+1 монета за каждый тап</p>
+                </div>
+                <div class="shop-price">25 LOOPY</div>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-icon"><i class="fas fa-clock"></i></div>
+                <div class="shop-content">
+                    <h3>Авто-тап</h3>
+                    <p>5 монет в минуту автоматически</p>
+                </div>
+                <div class="shop-price">50 LOOPY</div>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-icon"><i class="fas fa-sync-alt"></i></div>
+                <div class="shop-content">
+                    <h3>Ускоренное восстановление</h3>
+                    <p>Лимит тапов восстанавливается быстрее</p>
+                </div>
+                <div class="shop-price">40 LOOPY</div>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-icon"><i class="fas fa-gem"></i></div>
+                <div class="shop-content">
+                    <h3>Редкая удача</h3>
+                    <p>Шанс х2 награды при тапе</p>
+                </div>
+                <div class="shop-price">75 LOOPY</div>
+            </div>
+        </div>
+        
+        <!-- Страница заданий -->
+        <div class="page" id="tasks-page">
+            <div class="header">
+                <h1>Ежедневные задания</h1>
+                <p>Выполняйте задания для бонусных монет</p>
+            </div>
+            
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox" onchange="completeTask(0)">
+                <div>
+                    <h3>Сделать 50 тапов</h3>
+                    <p>0/50 выполнено</p>
+                </div>
+                <div class="task-reward">+10 LOOPY</div>
+            </div>
+            
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox" onchange="completeTask(1)">
+                <div>
+                    <h3>Сыграть в 2 игры</h3>
+                    <p>0/2 выполнено</p>
+                </div>
+                <div class="task-reward">+15 LOOPY</div>
+            </div>
+            
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox" onchange="completeTask(2)">
+                <div>
+                    <h3>Пригласить друга</h3>
+                    <p>Отправьте ссылку другу</p>
+                </div>
+                <div class="task-reward">+25 LOOPY</div>
+            </div>
+            
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox" onchange="completeTask(3)">
+                <div>
+                    <h3>Купить улучшение</h3>
+                    <p>Приобретите любой предмет в магазине</p>
+                </div>
+                <div class="task-reward">+20 LOOPY</div>
+            </div>
+            
+            <div class="task-item">
+                <input type="checkbox" class="task-checkbox" onchange="completeTask(4)">
+                <div>
+                    <h3>Получить ежедневный бонус</h3>
+                    <p>Заберите награду за вход</p>
+                </div>
+                <div class="task-reward">+5 LOOPY</div>
+            </div>
+        </div>
+        
+        <!-- Страница пополнения счета -->
+        <div class="page" id="deposit-page">
+            <div class="header">
+                <h1>Пополнение счета</h1>
+                <p>Пополните баланс TON для покупок</p>
+            </div>
+            
+            <div class="deposit-section">
+                <h3 class="section-title"><i class="fas fa-wallet"></i> Баланс TON</h3>
+                <div class="wallet-info">
+                    <p>Текущий баланс: <strong id="ton-balance">0</strong> TON</p>
+                    <p>Адрес кошелька: <strong id="deposit-address">Загрузка...</strong></p>
+                </div>
+                
+                <h3 class="section-title"><i class="fas fa-coins"></i> Сумма пополнения</h3>
+                <div class="deposit-amount">
+                    <input type="number" id="deposit-amount" placeholder="Введите сумму" min="0.1" step="0.1">
+                    <button class="btn" onclick="generateDepositAddress()">Показать адрес</button>
+                </div>
+                
+                <div class="deposit-options">
+                    <div class="deposit-option" onclick="setDepositAmount(1)">1 TON</div>
+                    <div class="deposit-option" onclick="setDepositAmount(5)">5 TON</div>
+                    <div class="deposit-option" onclick="setDepositAmount(10)">10 TON</div>
+                    <div class="deposit-option" onclick="setDepositAmount(20)">20 TON</div>
+                </div>
+                
+                <div id="payment-info" style="display: none;">
+                    <h3 class="section-title"><i class="fas fa-qrcode"></i> Реквизиты для оплаты</h3>
+                    <div class="wallet-info">
+                        <p>Отправьте <strong id="deposit-ton-amount">0</strong> TON на адрес:</p>
+                        <p id="deposit-wallet-address" style="word-break: break-all; font-family: monospace;"></p>
+                        <p>Комментарий: <strong id="deposit-comment"></strong></p>
+                    </div>
+                    <button class="btn" onclick="checkDeposit()">Проверить пополнение</button>
+                    <button class="btn btn-secondary" onclick="copyDepositAddress()">Скопировать адрес</button>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- Нижняя навигация -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchPage('home-page')">
+            <div class="nav-icon"><i class="fas fa-home"></i></div>
+            <div class="nav-label">Главная</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('games-page')">
+            <div class="nav-icon"><i class="fas fa-gamepad"></i></div>
+            <div class="nav-label">Игры</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('shop-page')">
+            <div class="nav-icon"><i class="fas fa-store"></i></div>
+            <div class="nav-label">Магазин</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('deposit-page')">
+            <div class="nav-icon"><i class="fas fa-plus-circle"></i></div>
+            <div class="nav-label">Пополнить</div>
+        </div>
+        <div class="nav-item" onclick="switchPage('tasks-page')">
+            <div class="nav-icon"><i class="fas fa-tasks"></i></div>
+            <div class="nav-label">Задания</div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">Текст уведомления</div>
 
     <script>
-        // ===== КОНФИГУРАЦИЯ =====
-        const CONFIG = {
-            TON_API_URL: 'https://toncenter.com/api/v2',
-            WALLET_ADDRESS: 'UQApupz4Ue6GqzKSfTe1jX8eJ3V8_HYekgaiwC-bNYnMLmEN',
-            AMOUNT: 1, // 1 TON
-            CHECK_INTERVAL: 30000, // 30 секунд
-            MANIFEST_URL: 'https://insomniavid.github.io/-/tonconnect-manifest.json'
-        };
-
-        // ===== ПЕРЕМЕННЫЕ =====
+        const TG = window.Telegram.WebApp;
+        TG.expand();
+        TG.enableClosingConfirmation();
+        
+        // Инициализация TON Connect
         let tonConnectUI;
-        let paymentCheckInterval;
-        let currentPaymentId = '';
-
-        // ===== ЭЛЕМЕНТЫ DOM =====
-        const elements = {
-            walletInfo: document.getElementById('wallet-info'),
-            walletAddress: document.getElementById('wallet-address'),
-            walletBalance: document.getElementById('wallet-balance'),
-            walletStatus: document.getElementById('wallet-status'),
-            disconnectBtn: document.getElementById('disconnect-btn'),
-            tonConnectPay: document.getElementById('ton-connect-pay'),
-            manualPayBtn: document.getElementById('manual-pay-btn'),
-            manualPayment: document.getElementById('manual-payment'),
-            paymentAddress: document.getElementById('payment-address'),
-            paymentComment: document.getElementById('payment-comment'),
-            checkPayment: document.getElementById('check-payment'),
-            copyAddress: document.getElementById('copy-address'),
-            paymentStatus: document.getElementById('payment-status'),
-            transactionsList: document.getElementById('transactions-list')
-        };
-
-        // ===== ИНИЦИАЛИЗАЦИЯ TON CONNECT =====
+        let walletConnected = false;
+        
+        // Игровые переменные
+        let balance = 0;
+        let tapCount = 0;
+        let tapLimit = 100; // Скрытый лимит 100 кликов
+        let tapsPerMinute = 0;
+        let lastTapTime = 0;
+        let isPremium = false;
+        let level = 1;
+        let multiplier = 1;
+        let tonBalance = 0;
+        
+        // Элементы DOM
+        const coin = document.getElementById('coin');
+        const balanceEl = document.getElementById('balance');
+        const levelEl = document.getElementById('level');
+        const multiplierEl = document.getElementById('multiplier');
+        const progressBar = document.getElementById('progress-bar');
+        const notification = document.getElementById('notification');
+        const walletInfo = document.getElementById('wallet-info');
+        const walletAddress = document.getElementById('wallet-address');
+        const walletBalance = document.getElementById('wallet-balance');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const tonBalanceEl = document.getElementById('ton-balance');
+        const depositAddressEl = document.getElementById('deposit-address');
+        
+        // Инициализация TON Connect :cite[1]:cite[2]
         function initTonConnect() {
             try {
                 tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                    manifestUrl: CONFIG.MANIFEST_URL,
+                    manifestUrl: 'https://your-app.com/tonconnect-manifest.json', // Замените на ваш URL
                     buttonRootId: 'ton-connect'
                 });
-
+                
                 // Восстановление соединения
                 tonConnectUI.connectionRestored.then(() => {
                     updateWalletInfo();
                 });
-
-                // Подписка на изменения
+                
+                // Подписка на изменения статуса кошелька
                 tonConnectUI.onStatusChange(wallet => {
                     updateWalletInfo(wallet);
                 });
-
+                
             } catch (error) {
-                showError('Ошибка инициализации TON Connect: ' + error.message);
+                showNotification('Ошибка инициализации TON Connect: ' + error.message);
             }
         }
-
-        // ===== ОБНОВЛЕНИЕ ИНФОРМАЦИИ О КОШЕЛЬКЕ =====
+        
+        // Обновление информации о кошельке
         function updateWalletInfo(wallet = null) {
             if (!wallet) {
-                wallet = tonConnectUI?.wallet;
+                wallet = tonConnectUI.wallet;
             }
-
+            
             if (wallet) {
-                elements.walletInfo.style.display = 'block';
-                elements.walletAddress.textContent = wallet.account.address;
-                elements.walletStatus.textContent = wallet.device.appName;
-                elements.tonConnectPay.disabled = false;
-
-                // Получение баланса
-                getBalance(wallet.account.address).then(balance => {
-                    elements.walletBalance.textContent = balance;
+                walletConnected = true;
+                walletInfo.style.display = 'block';
+                walletAddress.textContent = shortenAddress(wallet.account.address);
+                walletBalance.textContent = 'Загрузка...';
+                
+                // Получение баланса кошелька
+                getWalletBalance(wallet.account.address).then(balance => {
+                    walletBalance.textContent = balance;
+                    tonBalance = balance;
+                    tonBalanceEl.textContent = balance;
+                    depositAddressEl.textContent = wallet.account.address;
                 });
-
+                
             } else {
-                elements.walletInfo.style.display = 'none';
-                elements.tonConnectPay.disabled = true;
+                walletConnected = false;
+                walletInfo.style.display = 'none';
             }
         }
-
-        // ===== ПОЛУЧЕНИЕ БАЛАНСА =====
-        async function getBalance(address) {
+        
+        // Получение баланса кошелька
+        async function getWalletBalance(address) {
             try {
-                const response = await fetch(`${CONFIG.TON_API_URL}/getAddressInformation?address=${address}`);
-                const data = await response.json();
-                return (data.result.balance / 1000000000).toFixed(4);
+                // В реальном приложении используйте TON API
+                // Здесь просто заглушка для демонстрации
+                return (Math.random() * 10).toFixed(2);
             } catch (error) {
                 console.error('Ошибка получения баланса:', error);
-                return 'N/A';
+                return '0';
             }
         }
-
-        // ===== ГЕНЕРАЦИЯ ID ПЛАТЕЖА =====
-        function generatePaymentId() {
-            return 'pay_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        
+        // Сокращение адреса для отображения
+        function shortenAddress(address) {
+            if (!address) return '';
+            return address.substring(0, 6) + '...' + address.substring(address.length - 4);
         }
-
-        // ===== ПОКАЗ СТАТУСА =====
-        function showStatus(message, type = 'info') {
-            elements.paymentStatus.style.display = 'block';
-            elements.paymentStatus.className = `status status-${type}`;
-            elements.paymentStatus.innerHTML = message;
-            
-            // Автоскрытие через 5 секунд
-            if (type !== 'info') {
-                setTimeout(() => {
-                    elements.paymentStatus.style.display = 'none';
-                }, 5000);
+        
+        // Отключение кошелька
+        disconnectBtn.addEventListener('click', () => {
+            if (tonConnectUI) {
+                tonConnectUI.disconnect();
+                showNotification('Кошелек отключен');
             }
-        }
-
-        // ===== ОТПРАВКА ТРАНЗАКЦИИ ЧЕРЕЗ TON CONNECT =====
-        async function sendTonConnectPayment() {
-            try {
-                showStatus('🔄 Подготовка транзакции...', 'info');
-                
-                const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 300,
-                    messages: [
-                        {
-                            address: CONFIG.WALLET_ADDRESS,
-                            amount: (CONFIG.AMOUNT * 1000000000).toString(),
-                            payload: currentPaymentId
-                        }
-                    ]
-                };
-
-                const result = await tonConnectUI.sendTransaction(transaction);
-                
-                showStatus('✅ Транзакция отправлена! Ожидаем подтверждения...', 'success');
-                addTransactionToHistory(currentPaymentId, CONFIG.AMOUNT, 'pending');
-                
-                // Начинаем проверку статуса
-                startPaymentChecking();
-                
-            } catch (error) {
-                console.error('Ошибка отправки транзакции:', error);
-                showStatus('❌ Ошибка отправки: ' + error.message, 'error');
-            }
-        }
-
-        // ===== РУЧНАЯ ОПЛАТА =====
-        function setupManualPayment() {
-            currentPaymentId = generatePaymentId();
-            elements.paymentComment.textContent = currentPaymentId;
-            elements.manualPayment.style.display = 'block';
-            showStatus('📧 Скопируйте адрес и комментарий для оплаты', 'info');
-        }
-
-        // ===== ПРОВЕРКА ПЛАТЕЖА =====
-        async function checkPayment() {
-            try {
-                showStatus('🔄 Проверяем получение платежа...', 'info');
-                
-                // Эмуляция проверки платежа (в реальном проекте используйте бэкенд)
-                const paid = Math.random() > 0.7; // 30% шанс успешной оплаты для демо
-                
-                if (paid) {
-                    showStatus('✅ Платеж получен! Спасибо за покупку!', 'success');
-                    updateTransactionStatus(currentPaymentId, 'completed');
-                    stopPaymentChecking();
-                } else {
-                    showStatus('⏳ Платеж еще не получен. Проверьте позже.', 'info');
-                }
-                
-            } catch (error) {
-                console.error('Ошибка проверки платежа:', error);
-                showStatus('❌ Ошибка проверки платежа', 'error');
-            }
-        }
-
-        // ===== ЗАПУСК ПРОВЕРКИ ПЛАТЕЖА =====
-        function startPaymentChecking() {
-            stopPaymentChecking();
-            paymentCheckInterval = setInterval(checkPayment, CONFIG.CHECK_INTERVAL);
-        }
-
-        // ===== ОСТАНОВКА ПРОВЕРКИ ПЛАТЕЖА =====
-        function stopPaymentChecking() {
-            if (paymentCheckInterval) {
-                clearInterval(paymentCheckInterval);
-                paymentCheckInterval = null;
-            }
-        }
-
-        // ===== ДОБАВЛЕНИЕ ТРАНЗАКЦИИ В ИСТОРИЮ =====
-        function addTransactionToHistory(id, amount, status) {
-            const transactionItem = document.createElement('div');
-            transactionItem.className = 'transaction-item';
-            transactionItem.innerHTML = `
-                <div>
-                    <strong>${id}</strong><br>
-                    <small>${new Date().toLocaleString()}</small>
-                </div>
-                <div>
-                    <span class="badge badge-${status}">${getStatusText(status)}</span><br>
-                    <strong>${amount} TON</strong>
-                </div>
-            `;
-            elements.transactionsList.appendChild(transactionItem);
-        }
-
-        // ===== ОБНОВЛЕНИЕ СТАТУСА ТРАНЗАКЦИИ =====
-        function updateTransactionStatus(id, status) {
-            const transactions = elements.transactionsList.querySelectorAll('.transaction-item');
-            transactions.forEach(item => {
-                if (item.textContent.includes(id)) {
-                    const badge = item.querySelector('.badge');
-                    if (badge) {
-                        badge.className = `badge badge-${status}`;
-                        badge.textContent = getStatusText(status);
-                    }
-                }
-            });
-        }
-
-        // ===== ТЕКСТ СТАТУСА =====
-        function getStatusText(status) {
-            const statuses = {
-                'pending': 'Ожидание',
-                'completed': 'Успешно',
-                'failed': 'Ошибка'
-            };
-            return statuses[status] || status;
-        }
-
-        // ===== КОПИРОВАНИЕ АДРЕСА =====
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showStatus('✅ Адрес скопирован в буфер обмена', 'success');
-            }).catch(err => {
-                showStatus('❌ Ошибка копирования', 'error');
-            });
-        }
-
-        // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
-        function setupEventListeners() {
-            // Отключение кошелька
-            elements.disconnectBtn.addEventListener('click', () => {
-                if (tonConnectUI) {
-                    tonConnectUI.disconnect();
-                    showStatus('🔌 Кошелек отключен', 'info');
-                }
-            });
-
-            // TON Connect оплата
-            elements.tonConnectPay.addEventListener('click', sendTonConnectPayment);
-
-            // Ручная оплата
-            elements.manualPayBtn.addEventListener('click', setupManualPayment);
-
-            // Проверка платежа
-            elements.checkPayment.addEventListener('click', checkPayment);
-
-            // Копирование адреса
-            elements.copyAddress.addEventListener('click', () => {
-                copyToClipboard(CONFIG.WALLET_ADDRESS);
-            });
-        }
-
-        // ===== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ =====
-        function initApp() {
-            initTonConnect();
-            setupEventListeners();
-            console.log('TON Payment System initialized');
-        }
-
-        // ===== ЗАПУСК ПРИЛОЖЕНИЯ =====
-        document.addEventListener('DOMContentLoaded', initApp);
-
-        // ===== ОБРАБОТКА ОШИБОК =====
-        window.addEventListener('error', (e) => {
-            console.error('Global error:', e.error);
-            showStatus('❌ Произошла ошибка приложения', 'error');
         });
+        
+        // Инициализация игровых функций
+        coin.addEventListener('click', tapCoin);
+        loadData();
+        updateUI();
+        
+        // Скрытый лимит - проверка кликов в минуту
+        setInterval(() => {
+            tapsPerMinute = 0;
+        }, 60000); // Сбрасываем счетчик каждую минуту
 
-        // ===== СОХРАНЕНИЕ СОСТОЯНИЯ =====
-        function saveState() {
-            const state = {
-                transactions: Array.from(elements.transactionsList.children).map(child => child.innerHTML)
-            };
-            localStorage.setItem('ton_payment_state', JSON.stringify(state));
+        function tapCoin(event) {
+            const now = Date.now();
+            
+            // Проверка на скрытый лимит (100 кликов в минуту)
+            if (tapsPerMinute >= 100) {
+                showNotification('Слишком быстро! Подождите немного.');
+                return;
+            }
+            
+            // Проверка на анти-автокликер (менее 50мс между кликами)
+            if (lastTapTime > 0 && now - lastTapTime < 50) {
+                showNotification('Не используйте автокликеры!');
+                return;
+            }
+            
+            tapsPerMinute++;
+            lastTapTime = now;
+            tapCount++;
+            
+            const coinsEarned = isPremium ? 2 * multiplier : 1 * multiplier;
+            balance += coinsEarned;
+            
+            // Создаем летающую монету
+            createFloatingCoin(event, `+${coinsEarned}`);
+            
+            // Анимация
+            coin.classList.add('pulse');
+            setTimeout(() => coin.classList.remove('pulse'), 300);
+            
+            updateUI();
+            saveData();
         }
-
-        function loadState() {
-            const saved = localStorage.getItem('ton_payment_state');
-            if (saved) {
-                const state = JSON.parse(saved);
-                state.transactions.forEach(html => {
-                    const div = document.createElement('div');
-                    div.className = 'transaction-item';
-                    div.innerHTML = html;
-                    elements.transactionsList.appendChild(div);
-                });
+        
+        function createFloatingCoin(event, text) {
+            const floatingCoin = document.createElement('div');
+            floatingCoin.className = 'coin-float';
+            floatingCoin.textContent = text;
+            floatingCoin.style.left = `${event.clientX - 20}px`;
+            floatingCoin.style.top = `${event.clientY - 20}px`;
+            
+            document.body.appendChild(floatingCoin);
+            
+            setTimeout(() => {
+                document.body.removeChild(floatingCoin);
+            }, 1000);
+        }
+        
+        function updateUI() {
+            balanceEl.textContent = balance;
+            levelEl.textContent = level;
+            multiplierEl.textContent = multiplier + 'x';
+            
+            // Обновляем прогресс-бар (основано на скрытом лимите)
+            const progress = Math.min(100, (tapCount / tapLimit) * 100);
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        function claimRewards() {
+            showNotification(`Вы получили ${balance} LOOPY!`);
+            balance = 0;
+            updateUI();
+            saveData();
+        }
+        
+        function buyPremium() {
+            if (!walletConnected) {
+                showNotification('Сначала подключите кошелек TON');
+                return;
+            }
+            
+            if (tonBalance < 10) {
+                showNotification('Недостаточно TON для покупки подписки');
+                switchPage('deposit-page');
+                return;
+            }
+            
+            isPremium = true;
+            multiplier = 2;
+            showNotification('Премиум активирован на 30 дней! Множитель x2!');
+            updateUI();
+            saveData();
+        }
+        
+        function openGame(game) {
+            if (game === 'racing' || game === 'adventure') {
+                if (!isPremium) {
+                    showNotification('Эта игра только для Premium пользователей!');
+                    return;
+                }
+            }
+            
+            showNotification(`Игра "${game}" запускается...`);
+        }
+        
+        function startGame(game) {
+            if (game === 'tictactoe') {
+                document.getElementById('tictactoe-game').style.display = 'block';
+                resetTicTacToe();
+            } else if (game === 'slots') {
+                document.getElementById('slots-game').style.display = 'block';
+                resetSlots();
+            } else {
+                openGame(game);
             }
         }
-
-        // Загружаем сохраненное состояние
-        loadState();
-
-        // Сохраняем состояние при изменении
-        setInterval(saveState, 10000);
+        
+        function hideGame(game) {
+            document.getElementById(`${game}-game`).style.display = 'none';
+        }
+        
+        // Игра в крестики-нолики
+        let currentPlayer = 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        
+        function resetTicTacToe() {
+            currentPlayer = 'X';
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            
+            document.querySelectorAll('.game-cell').forEach(cell => {
+                cell.textContent = '';
+            });
+            
+            document.getElementById('tictactoe-message').textContent = 'Ход игрока X';
+        }
+        
+        function makeMove(index) {
+            if (!gameActive || gameBoard[index] !== '') return;
+            
+            gameBoard[index] = currentPlayer;
+            document.querySelector(`.game-cell[data-index="${index}"]`).textContent = currentPlayer;
+            
+            if (checkWinner()) {
+                document.getElementById('tictactoe-message').textContent = `Игрок ${currentPlayer} победил!`;
+                gameActive = false;
+                
+                if (currentPlayer === 'X') {
+                    balance += 10;
+                    showNotification('+10 LOOPY за победу!');
+                    updateUI();
+                    saveData();
+                }
+                
+                return;
+            }
+            
+            if (gameBoard.every(cell => cell !== '')) {
+                document.getElementById('tictactoe-message').textContent = 'Ничья!';
+                gameActive = false;
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('tictactoe-message').textContent = `Ход игрока ${currentPlayer}`;
+            
+            if (currentPlayer === 'O') {
+                setTimeout(makeAIMove, 500);
+            }
+        }
+        
+        function makeAIMove() {
+            const emptyCells = gameBoard.map((cell, index) => cell === '' ? index : null).filter(val => val !== null);
+            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            makeMove(randomIndex);
+        }
+        
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]             // diagonals
+            ];
+            
+            return winPatterns.some(pattern => {
+                const [a, b, c] = pattern;
+                return gameBoard[a] !== '' && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c];
+            });
+        }
+        
+        // Игра в слоты
+        function resetSlots() {
+            document.getElementById('slots-message').textContent = 'Сделайте ставку 5 LOOPY';
+        }
+        
+        function spinSlots() {
+            if (balance < 5) {
+                showNotification('Недостаточно LOOPY для игры!');
+                return;
+            }
+            
+            balance -= 5;
+            updateUI();
+            saveData();
+            
+            const symbols = ['🍒', '🍋', '🍊', '🍇', '🍉', '⭐'];
+            const slots = [
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)],
+                symbols[Math.floor(Math.random() * symbols.length)]
+            ];
+            
+            const slotsBoard = document.getElementById('slots-board');
+            slotsBoard.children[0].textContent = slots[0];
+            slotsBoard.children[1].textContent = slots[1];
+            slotsBoard.children[2].textContent = slots[2];
+            
+            if (slots[0] === slots[1] && slots[1] === slots[2]) {
+                const winAmount = slots[0] === '⭐' ? 50 : 20;
+                balance += winAmount;
+                document.getElementById('slots-message').textContent = `ДЖЕКПОТ! Вы выиграли ${winAmount} LOOPY!`;
+                showNotification(`Поздравляем! +${winAmount} LOOPY!`);
+            } else if (slots[0] === slots[1] || slots[1] === slots[2] || slots[0] === slots[2]) {
+                balance += 10;
+                document.getElementById('slots-message').textContent = 'Вы выиграли 10 LOOPY!';
+                showNotification('+10 LOOPY!');
+            } else {
+                document.getElementById('slots-message').textContent = 'Повезет в следующий раз!';
+            }
+            
+            updateUI();
+            saveData();
+        }
+        
+        // Обработчики событий для игр
+        document.querySelectorAll('.game-cell[data-index]').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                makeMove(index);
+            });
+        });
+        
+        function completeTask(taskId) {
+            const rewards = [10, 15, 25, 20, 5];
+            balance += rewards[taskId];
+            showNotification(`Задание выполнено! +${rewards[taskId]} LOOPY`);
+            updateUI();
+            saveData();
+        }
+        
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(pageId).classList.add('active');
+            
+            // Находим соответствующий элемент навигации и активируем его
+            const navIndex = Array.from(document.querySelectorAll('.nav-item')).findIndex(
+                item => item.onclick.toString().includes(pageId)
+            );
+            
+            if (navIndex >= 0) {
+                document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
+            }
+        }
+        
+        function showNotification(text) {
+            notification.textContent = text;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        function loadData() {
+            const data = localStorage.getItem('loopyData');
+            if (data) {
+                const parsed = JSON.parse(data);
+                balance = parsed.balance || 0;
+                tapCount = parsed.tapCount || 0;
+                isPremium = parsed.isPremium || false;
+                level = parsed.level || 1;
+                multiplier = parsed.multiplier || 1;
+            }
+        }
+        
+        function saveData() {
+            const data = {
+                balance,
+                tapCount,
+                isPremium,
+                level,
+                multiplier
+            };
+            localStorage.setItem('loopyData', JSON.stringify(data));
+        }
+        
+        // Функции для пополнения счета
+        function setDepositAmount(amount) {
+            document.getElementById('deposit-amount').value = amount;
+        }
+        
+        function generateDepositAddress() {
+            const amount = document.getElementById('deposit-amount').value;
+            if (!amount || amount < 0.1) {
+                showNotification('Введите корректную сумму');
+                return;
+            }
+            
+            if (!walletConnected) {
+                showNotification('Сначала подключите кошелек TON');
+                return;
+            }
+            
+            document.getElementById('deposit-ton-amount').textContent = amount;
+            document.getElementById('deposit-wallet-address').textContent = walletAddress.textContent;
+            document.getElementById('deposit-comment').textContent = `deposit_${Date.now()}`;
+            document.getElementById('payment-info').style.display = 'block';
+        }
+        
+        function checkDeposit() {
+            showNotification('Проверяем пополнение...');
+            // В реальном приложении здесь будет проверка транзакции в блокчейне
+        }
+        
+        function copyDepositAddress() {
+            navigator.clipboard.writeText(walletAddress.textContent).then(() => {
+                showNotification('Адрес скопирован');
+            });
+        }
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            initTonConnect();
+            loadData();
+            updateUI();
+        });
     </script>
 </body>
 </html>
