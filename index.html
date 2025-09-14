@@ -26,6 +26,14 @@
             border-radius: 5px;
             border-left: 4px solid #4caf50;
         }
+        .error-message {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
         .button {
             background-color: #007bff;
             color: white;
@@ -51,6 +59,8 @@
     <div class="container">
         <h1>TON Connect Integration</h1>
         
+        <div id="error-message" class="error-message"></div>
+        
         <div id="ton-connect"></div>
         
         <div id="wallet-info" class="wallet-info" style="display: none;">
@@ -61,6 +71,13 @@
             
             <button id="disconnect-btn" class="button button-disconnect">Отключить кошелек</button>
             <button id="send-tx-btn" class="button">Отправить транзакцию</button>
+            <button id="clear-storage-btn" class="button">Очистить хранилище</button>
+        </div>
+        
+        <div id="debug-info" style="margin-top: 20px; display: none;">
+            <h4>Отладочная информация:</h4>
+            <p id="storage-status"></p>
+            <p id="wallet-status"></p>
         </div>
     </div>
 
@@ -69,14 +86,10 @@
         const STORAGE_KEYS = {
             WALLET: 'tonconnect_wallet',
             BALANCE: 'tonconnect_balance',
-            DEVICE: 'tonconnect_device'
+            DEVICE: 'tonconnect_device',
+            CONNECTOR: 'ton-connect-storage_connector',
+            WALLET_INFO: 'ton-connect-storage_wallet'
         };
-
-        // Инициализация TON Connect UI
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://insomniavid.github.io/-/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect'
-        });
 
         // Элементы DOM
         const walletInfo = document.getElementById('wallet-info');
@@ -85,39 +98,125 @@
         const walletDevice = document.getElementById('wallet-device');
         const disconnectBtn = document.getElementById('disconnect-btn');
         const sendTxBtn = document.getElementById('send-tx-btn');
+        const clearStorageBtn = document.getElementById('clear-storage-btn');
+        const errorMessage = document.getElementById('error-message');
+        const debugInfo = document.getElementById('debug-info');
+        const storageStatus = document.getElementById('storage-status');
+        const walletStatus = document.getElementById('wallet-status');
+
+        // Показать ошибку
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            console.error(message);
+        }
+
+        // Проверка поддержки localStorage
+        function isLocalStorageSupported() {
+            try {
+                const test = 'test';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                showError('localStorage не поддерживается: ' + e.message);
+                return false;
+            }
+        }
+
+        // Проверка существования ключей TON Connect в localStorage
+        function checkTonConnectStorage() {
+            let hasTonConnectData = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.includes('ton-connect')) {
+                    hasTonConnectData = true;
+                    break;
+                }
+            }
+            return hasTonConnectData;
+        }
 
         // Загрузка сохраненных данных
         function loadSavedData() {
-            const savedWallet = localStorage.getItem(STORAGE_KEYS.WALLET);
-            const savedBalance = localStorage.getItem(STORAGE_KEYS.BALANCE);
-            const savedDevice = localStorage.getItem(STORAGE_KEYS.DEVICE);
+            if (!isLocalStorageSupported()) return;
+            
+            try {
+                const savedWallet = localStorage.getItem(STORAGE_KEYS.WALLET);
+                const savedBalance = localStorage.getItem(STORAGE_KEYS.BALANCE);
+                const savedDevice = localStorage.getItem(STORAGE_KEYS.DEVICE);
+                
+                const hasTonConnectData = checkTonConnectStorage();
+                storageStatus.textContent = `Данные TON Connect в хранилище: ${hasTonConnectData ? 'есть' : 'нет'}`;
+                walletStatus.textContent = `Сохраненный кошелек: ${savedWallet || 'нет'}`;
+                debugInfo.style.display = 'block';
 
-            if (savedWallet) {
-                walletInfo.style.display = 'block';
-                walletAddress.textContent = `Адрес: ${savedWallet}`;
-                
-                if (savedBalance) {
-                    walletBalance.textContent = `Баланс: ${savedBalance} TON`;
+                if (savedWallet) {
+                    walletInfo.style.display = 'block';
+                    walletAddress.textContent = `Адрес: ${savedWallet}`;
+                    
+                    if (savedBalance) {
+                        walletBalance.textContent = `Баланс: ${savedBalance} TON`;
+                    }
+                    
+                    if (savedDevice) {
+                        walletDevice.textContent = `Устройство: ${savedDevice}`;
+                    }
                 }
-                
-                if (savedDevice) {
-                    walletDevice.textContent = `Устройство: ${savedDevice}`;
-                }
+            } catch (e) {
+                showError('Ошибка загрузки данных: ' + e.message);
             }
         }
 
         // Сохранение данных в localStorage
         function saveToStorage(key, value) {
+            if (!isLocalStorageSupported()) return false;
+            
             try {
                 localStorage.setItem(key, value);
+                return true;
             } catch (e) {
-                console.error('Ошибка сохранения в localStorage:', e);
+                if (e.name === 'QuotaExceededError') {
+                    showError('Превышен лимит хранилища. Очистите данные сайта в настройках браузера.');
+                } else {
+                    showError('Ошибка сохранения: ' + e.message);
+                }
+                return false;
             }
+        }
+
+        // Очистка хранилища
+        function clearStorage() {
+            if (!isLocalStorageSupported()) return;
+            
+            try {
+                // Очищаем только наши данные, оставляя данные TON Connect
+                Object.values(STORAGE_KEYS).forEach(key => {
+                    if (key !== 'CONNECTOR' && key !== 'WALLET_INFO') {
+                        localStorage.removeItem(key);
+                    }
+                });
+                alert('Хранилище очищено. Страница будет перезагружена.');
+                location.reload();
+            } catch (e) {
+                showError('Ошибка очистки хранилища: ' + e.message);
+            }
+        }
+
+        // Инициализация TON Connect UI
+        let tonConnectUI;
+        try {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: 'https://insomniavid.github.io/-/tonconnect-manifest.json',
+                buttonRootId: 'ton-connect'
+            });
+        } catch (e) {
+            showError('Ошибка инициализации TON Connect: ' + e.message);
         }
 
         // Обновление интерфейса
         function updateUI(wallet = null) {
-            if (!wallet) {
+            if (!wallet && tonConnectUI) {
                 wallet = tonConnectUI.wallet;
             }
 
@@ -139,7 +238,9 @@
                 walletInfo.style.display = 'none';
                 // Очистка сохраненных данных при отключении
                 Object.values(STORAGE_KEYS).forEach(key => {
-                    localStorage.removeItem(key);
+                    if (localStorage.getItem(key)) {
+                        localStorage.removeItem(key);
+                    }
                 });
             }
         }
@@ -161,9 +262,13 @@
             // Загрузка сохраненных данных
             loadSavedData();
             
+            if (!tonConnectUI) return;
+            
             // Проверка подключения при загрузке
             tonConnectUI.connectionRestored.then(() => {
                 updateUI();
+            }).catch(error => {
+                console.warn('Не удалось восстановить соединение:', error);
             });
 
             // Подписка на изменения состояния
@@ -173,9 +278,13 @@
 
             // Отключение кошелька
             disconnectBtn.addEventListener('click', () => {
-                tonConnectUI.disconnect();
-                // Данные очищаются в updateUI()
+                if (tonConnectUI) {
+                    tonConnectUI.disconnect();
+                }
             });
+
+            // Очистка хранилища
+            clearStorageBtn.addEventListener('click', clearStorage);
 
             // Отправка транзакции
             sendTxBtn.addEventListener('click', async () => {
@@ -196,33 +305,18 @@
                     console.log('Результат транзакции:', result);
                 } catch (error) {
                     console.error('Ошибка отправки транзакции:', error);
-                    alert('Ошибка отправки транзакции');
+                    alert('Ошибка отправки транзакции: ' + error.message);
                 }
             });
         });
 
-        // Обработка ошибок localStorage
+        // Отслеживание изменений в хранилище
         window.addEventListener('storage', function(e) {
-            console.log('Изменение в хранилище:', e);
-        });
-
-        // Проверка поддержки localStorage
-        function isLocalStorageSupported() {
-            try {
-                const test = 'test';
-                localStorage.setItem(test, test);
-                localStorage.removeItem(test);
-                return true;
-            } catch (e) {
-                console.error('localStorage не поддерживается:', e);
-                return false;
+            console.log('Изменение в хранилище:', e.key, e.newValue);
+            if (e.key === STORAGE_KEYS.WALLET || e.key === STORAGE_KEYS.BALANCE) {
+                loadSavedData();
             }
-        }
-
-        // Инициализация проверки поддержки
-        if (!isLocalStorageSupported()) {
-            alert('Ваш браузер не поддерживает сохранение данных. Некоторые функции могут работать некорректно.');
-        }
+        });
     </script>
 </body>
 </html>
