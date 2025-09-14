@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Connect Integration</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>TON Connect с сохранением данных</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         body {
@@ -46,259 +45,184 @@
         .button-disconnect:hover {
             background-color: #c82333;
         }
-        .hidden {
-            display: none;
-        }
-        .status {
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-        }
-        .status-connected {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .status-disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>TON Connect Integration</h1>
         
-        <div id="status" class="status status-disconnected">
-            Кошелек не подключен
-        </div>
-        
         <div id="ton-connect"></div>
         
-        <div id="wallet-info" class="wallet-info hidden">
+        <div id="wallet-info" class="wallet-info" style="display: none;">
             <h3>Информация о кошельке:</h3>
             <p id="wallet-address"></p>
             <p id="wallet-balance"></p>
             <p id="wallet-device"></p>
-            <p id="wallet-chain"></p>
             
             <button id="disconnect-btn" class="button button-disconnect">Отключить кошелек</button>
             <button id="send-tx-btn" class="button">Отправить транзакцию</button>
-            <button id="refresh-btn" class="button">Обновить баланс</button>
         </div>
     </div>
 
     <script>
+        // Ключи для localStorage
+        const STORAGE_KEYS = {
+            WALLET: 'tonconnect_wallet',
+            BALANCE: 'tonconnect_balance',
+            DEVICE: 'tonconnect_device'
+        };
+
         // Инициализация TON Connect UI
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://insomniavid.github.io/-/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect',
-            language: 'ru'
+            buttonRootId: 'ton-connect'
         });
 
         // Элементы DOM
-        const statusElement = document.getElementById('status');
         const walletInfo = document.getElementById('wallet-info');
         const walletAddress = document.getElementById('wallet-address');
         const walletBalance = document.getElementById('wallet-balance');
         const walletDevice = document.getElementById('wallet-device');
-        const walletChain = document.getElementById('wallet-chain');
         const disconnectBtn = document.getElementById('disconnect-btn');
         const sendTxBtn = document.getElementById('send-tx-btn');
-        const refreshBtn = document.getElementById('refresh-btn');
 
-        // Ключи для localStorage
-        const STORAGE_KEYS = {
-            WALLET_CONNECTED: 'walletConnected',
-            WALLET_DATA: 'walletData'
-        };
+        // Загрузка сохраненных данных
+        function loadSavedData() {
+            const savedWallet = localStorage.getItem(STORAGE_KEYS.WALLET);
+            const savedBalance = localStorage.getItem(STORAGE_KEYS.BALANCE);
+            const savedDevice = localStorage.getItem(STORAGE_KEYS.DEVICE);
 
-        // Функция для обновления статуса подключения
-        function updateStatus(isConnected) {
-            if (isConnected) {
-                statusElement.textContent = 'Кошелек подключен';
-                statusElement.className = 'status status-connected';
-            } else {
-                statusElement.textContent = 'Кошелек не подключен';
-                statusElement.className = 'status status-disconnected';
+            if (savedWallet) {
+                walletInfo.style.display = 'block';
+                walletAddress.textContent = `Адрес: ${savedWallet}`;
+                
+                if (savedBalance) {
+                    walletBalance.textContent = `Баланс: ${savedBalance} TON`;
+                }
+                
+                if (savedDevice) {
+                    walletDevice.textContent = `Устройство: ${savedDevice}`;
+                }
             }
         }
 
-        // Функция для сохранения данных кошелька в localStorage
-        function saveWalletData(wallet) {
-            if (wallet) {
-                const walletData = {
-                    address: wallet.account.address,
-                    chain: wallet.account.chain,
-                    publicKey: wallet.account.publicKey,
-                    device: wallet.device,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(STORAGE_KEYS.WALLET_DATA, JSON.stringify(walletData));
-                localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'true');
-            } else {
-                localStorage.removeItem(STORAGE_KEYS.WALLET_DATA);
-                localStorage.setItem(STORAGE_KEYS.WALLET_CONNECTED, 'false');
+        // Сохранение данных в localStorage
+        function saveToStorage(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                console.error('Ошибка сохранения в localStorage:', e);
             }
         }
 
-        // Функция для загрузки данных кошелька из localStorage
-        function loadWalletData() {
-            const data = localStorage.getItem(STORAGE_KEYS.WALLET_DATA);
-            return data ? JSON.parse(data) : null;
-        }
-
-        // Функция проверки подключения кошелька
-        function isWalletConnected() {
-            return localStorage.getItem(STORAGE_KEYS.WALLET_CONNECTED) === 'true';
-        }
-
-        // Функция обновления интерфейса
+        // Обновление интерфейса
         function updateUI(wallet = null) {
             if (!wallet) {
                 wallet = tonConnectUI.wallet;
             }
 
             if (wallet) {
-                walletInfo.classList.remove('hidden');
+                walletInfo.style.display = 'block';
                 walletAddress.textContent = `Адрес: ${wallet.account.address}`;
-                walletDevice.textContent = `Устройство: ${wallet.device.appName} (${wallet.device.type})`;
-                walletChain.textContent = `Сеть: ${wallet.account.chain === -3 ? 'Testnet' : 'Mainnet'}`;
+                walletDevice.textContent = `Устройство: ${wallet.device.appName}`;
                 
-                // Сохраняем данные кошелька
-                saveWalletData(wallet);
-                updateStatus(true);
+                // Сохранение данных
+                saveToStorage(STORAGE_KEYS.WALLET, wallet.account.address);
+                saveToStorage(STORAGE_KEYS.DEVICE, wallet.device.appName);
                 
-                // Получение баланса
+                // Получение и сохранение баланса
                 getBalance(wallet.account.address).then(balance => {
                     walletBalance.textContent = `Баланс: ${balance} TON`;
+                    saveToStorage(STORAGE_KEYS.BALANCE, balance);
                 });
             } else {
-                walletInfo.classList.add('hidden');
-                saveWalletData(null);
-                updateStatus(false);
+                walletInfo.style.display = 'none';
+                // Очистка сохраненных данных при отключении
+                Object.values(STORAGE_KEYS).forEach(key => {
+                    localStorage.removeItem(key);
+                });
             }
         }
 
-        // Функция получения баланса
+        // Получение баланса
         async function getBalance(address) {
             try {
-                // Определяем сеть на основе адреса
-                const isTestnet = address.includes('testnet') || address.includes('-3');
-                const apiUrl = isTestnet 
-                    ? 'https://testnet.toncenter.com/api/v2/getAddressInformation' 
-                    : 'https://toncenter.com/api/v2/getAddressInformation';
-                
-                const response = await fetch(`${apiUrl}?address=${address}`);
+                const response = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${address}`);
                 const data = await response.json();
-                
-                if (data.result && data.result.balance !== undefined) {
-                    return (data.result.balance / 1000000000).toFixed(2);
-                } else {
-                    return '0.00';
-                }
+                return (data.result.balance / 1000000000).toFixed(2);
             } catch (error) {
                 console.error('Ошибка получения баланса:', error);
                 return 'N/A';
             }
         }
 
-        // Отключение кошелька
-        disconnectBtn.addEventListener('click', () => {
-            tonConnectUI.disconnect();
-            updateUI(null);
-        });
-
-        // Обновление баланса
-        refreshBtn.addEventListener('click', () => {
-            const wallet = tonConnectUI.wallet;
-            if (wallet) {
-                getBalance(wallet.account.address).then(balance => {
-                    walletBalance.textContent = `Баланс: ${balance} TON`;
-                });
-            }
-        });
-
-        // Отправка транзакции
-        sendTxBtn.addEventListener('click', async () => {
-            try {
-                const wallet = tonConnectUI.wallet;
-                if (!wallet) {
-                    alert('Сначала подключите кошелек');
-                    return;
-                }
-
-                const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
-                    messages: [
-                        {
-                            address: 'UQApupz4Ue6GqzKSfTe1jX8eJ3V8_HYekgaiwC-bNYnMLmEN',
-                            amount: '1000000', // 0.001 TON
-                            payload: null
-                        }
-                    ]
-                };
-
-                const result = await tonConnectUI.sendTransaction(transaction);
-                alert('Транзакция отправлена успешно!');
-                console.log('Результат транзакции:', result);
-                
-                // Обновляем баланс после транзакции
-                getBalance(wallet.account.address).then(balance => {
-                    walletBalance.textContent = `Баланс: ${balance} TON`;
-                });
-            } catch (error) {
-                console.error('Ошибка отправки транзакции:', error);
-                alert('Ошибка отправки транзакции: ' + error.message);
-            }
-        });
-
-        // Проверка состояния подключения при загрузке страницы
-        document.addEventListener('DOMContentLoaded', () => {
-            // Инициализация Telegram WebApp
-            const tg = window.Telegram?.WebApp;
-            if (tg) {
-                tg.expand();
-                tg.enableClosingConfirmation();
-            }
-
-            // Проверяем, есть ли сохраненное состояние кошелька
-            const wasConnected = isWalletConnected();
-            const savedWallet = loadWalletData();
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загрузка сохраненных данных
+            loadSavedData();
             
-            if (wasConnected && savedWallet) {
-                // Показываем статус, что кошелек был подключен
-                updateStatus(true);
-                
-                // Пытаемся восстановить соединение
-                tonConnectUI.connectionRestored.then(() => {
-                    console.log('Соединение восстановлено');
-                    updateUI(tonConnectUI.wallet);
-                }).catch(error => {
-                    console.error('Ошибка восстановления соединения:', error);
-                    updateStatus(false);
-                });
+            // Проверка подключения при загрузке
+            tonConnectUI.connectionRestored.then(() => {
+                updateUI();
+            });
+
+            // Подписка на изменения состояния
+            tonConnectUI.onStatusChange(wallet => {
+                updateUI(wallet);
+            });
+
+            // Отключение кошелька
+            disconnectBtn.addEventListener('click', () => {
+                tonConnectUI.disconnect();
+                // Данные очищаются в updateUI()
+            });
+
+            // Отправка транзакции
+            sendTxBtn.addEventListener('click', async () => {
+                try {
+                    const transaction = {
+                        validUntil: Math.floor(Date.now() / 1000) + 300,
+                        messages: [
+                            {
+                                address: 'UQApupz4Ue6GqzKSfTe1jX8eJ3V8_HYekgaiwC-bNYnMLmEN',
+                                amount: '1000000',
+                                payload: null
+                            }
+                        ]
+                    };
+
+                    const result = await tonConnectUI.sendTransaction(transaction);
+                    alert('Транзакция отправлена успешно!');
+                    console.log('Результат транзакции:', result);
+                } catch (error) {
+                    console.error('Ошибка отправки транзакции:', error);
+                    alert('Ошибка отправки транзакции');
+                }
+            });
+        });
+
+        // Обработка ошибок localStorage
+        window.addEventListener('storage', function(e) {
+            console.log('Изменение в хранилище:', e);
+        });
+
+        // Проверка поддержки localStorage
+        function isLocalStorageSupported() {
+            try {
+                const test = 'test';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                console.error('localStorage не поддерживается:', e);
+                return false;
             }
-        });
+        }
 
-        // Подписка на изменения состояния кошелька
-        tonConnectUI.onStatusChange(wallet => {
-            console.log('Статус кошелька изменился:', wallet);
-            updateUI(wallet);
-        });
-
-        // Обработка ошибок TON Connect
-        tonConnectUI.onError(error => {
-            console.error('Ошибка TON Connect:', error);
-            alert('Произошла ошибка: ' + error.message);
-        });
-
-        // Дополнительная диагностика
-        console.log('TON Connect инициализирован');
-        console.log('Состояние localStorage:', {
-            connected: isWalletConnected(),
-            walletData: loadWalletData()
-        });
+        // Инициализация проверки поддержки
+        if (!isLocalStorageSupported()) {
+            alert('Ваш браузер не поддерживает сохранение данных. Некоторые функции могут работать некорректно.');
+        }
     </script>
 </body>
 </html>
